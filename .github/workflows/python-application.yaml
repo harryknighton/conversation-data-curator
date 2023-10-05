@@ -1,0 +1,24 @@
+name: Python Application
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup PDM
+      uses: pdm-project/setup-pdm@v3
+    - name: Install dependencies
+      run: pdm install
+    - name: Run pytest tests
+      run: pdm run pytest --doctest-modules tests
