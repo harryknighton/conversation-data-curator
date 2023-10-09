@@ -33,4 +33,5 @@ repos:
     -   id: mypy
         additional_dependencies:
             - sqlalchemy>=2.0.21
-        args: [--config, setup.cfg]
+            - alembic>=1.12.0
+        args: [--config-file, setup.cfg]
