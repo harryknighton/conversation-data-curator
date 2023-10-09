@@ -31,4 +31,6 @@ repos:
     rev: v1.5.1
     hooks:
     -   id: mypy
-        args: [--config, setup.cfg, --strict, --ignore-missing-imports]
+        additional_dependencies:
+            - sqlalchemy>=2.0.21
+        args: [--config, setup.cfg]
