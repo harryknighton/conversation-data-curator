@@ -2,7 +2,7 @@
 
 from typing import Any, List
 
-from sqlalchemy import Row, func, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from src.models import Message
@@ -30,7 +30,6 @@ def create_message(session: Session, content: str) -> Message:
     return message
 
 
-def read_messages(session: Session) -> List[Row[Any]]:
-    statement = select(Message)
-    result = session.execute(statement)
-    return list(result.all())  # list() needed for type hinting
+def read_messages(session: Session) -> List[Any]:
+    result = session.scalars(select(Message)).all()
+    return list(result)  # list() needed for type hinting
