@@ -5,7 +5,7 @@ from typing import Any, List
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from src.models import Message
+from .models import Message
 
 
 def count_messages(session: Session) -> int:
