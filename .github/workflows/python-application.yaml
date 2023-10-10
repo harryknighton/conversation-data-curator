@@ -21,8 +21,8 @@ jobs:
     - name: Install dependencies
       run: pdm install
     - name: Run flake8 linting
-      run: pdm run flake8 --config setup.cfg src tests
+      run: pdm run flake8 --config setup.cfg backend tests
     - name: Run mypy type checking
-      run: pdm run mypy --config-file setup.cfg src tests
+      run: pdm run mypy --config-file setup.cfg backend tests
     - name: Run pytest tests
-      run: pdm run pytest --doctest-modules tests
+      run: pdm run pytest --doctest-modules backend tests
