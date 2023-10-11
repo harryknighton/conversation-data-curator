@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, type Ref } from 'vue'
+  import { ref, type Ref, nextTick } from 'vue'
   import axios from 'axios'
   import { VDataTableServer } from 'vuetify/labs/VDataTable'
 import { computed } from 'vue';
@@ -14,29 +14,98 @@ import { computed } from 'vue';
     { title: 'Content', key: 'content', align: 'start' },
     { title: 'Actions', key: 'actions', sortable: false }
   ]);
-  const search = ref("");
+  const search = ref("");  // Contents of search bar
   const loading = ref(false);
   const isMessageDialogueOpen = ref(false);
   const isDeleteDialogueOpen = ref(false);
   const editIndex = ref(-1);
-  const editedMessage: Message = ref({
+  const inputMessage: Ref<Message> = ref({  // Hold the message input through the message dialogue
     id: -1,
     content: ""
   })
-  const defaultMessage: Message = ref({
+  const defaultMessage: Ref<Message> = ref({  // Default to restore the input message to
+    id: -1,
     content: ""
   })
-  const formTitle = computed(() => {return editIndex.value === -1 ? "New Message" : 'Edit Message'})
+  const editing = computed(() => {return editIndex.value !== -1})
+  const formTitle = computed(() => {return editing ? 'Edit Message' : "New Message"})
 
-  async function getMessages() {
+  // Create or edit a message
+  function editMessage(message: Message) {
+    editIndex.value = messages.value.indexOf(message)
+    inputMessage.value = Object.assign({}, message)
+    isMessageDialogueOpen.value = true
+  }
+
+  async function confirmMessageDialogue() {
+    if (editing.value) {
+      updateDBMessage(inputMessage.value)
+      Object.assign(messages.value[editIndex.value], inputMessage.value)
+    } else {
+      let createdMessage = await createDBMessage(inputMessage.value);
+      messages.value.push(createdMessage);
+    }
+    closeMessageDialogue();
+  }
+
+  function closeMessageDialogue() {
+    isMessageDialogueOpen.value = false
+    nextTick(() => {
+      inputMessage.value = Object.assign({}, defaultMessage.value)
+      editIndex.value = -1
+    })
+  }
+
+  // Delete a message
+  function deleteMessage(message: Message) {
+    editIndex.value = messages.value.indexOf(message)
+    inputMessage.value = Object.assign({}, message)
+    isDeleteDialogueOpen.value = true
+  }
+
+  function confirmDeleteDialogue() {
+    deleteDBMessage(inputMessage.value)
+    messages.value.splice(editIndex.value, 1);
+    closeDeleteDialogue();
+  }
+
+  function closeDeleteDialogue() {
+    isDeleteDialogueOpen.value = false;
+    nextTick(() => {
+      inputMessage.value = Object.assign({}, defaultMessage.value)
+      editIndex.value = -1
+    })
+  }
+
+  // Annotate a message [Not implemented]
+  function annotateMessage(item: Message) {
+
+  }
+
+  // Database CRUD operations
+  async function createDBMessage(message: Message) : Promise<Message> {
+    const args = { ...message } as Partial<Message>;
+    delete args.id;
+    let response = await axios.post('http://127.0.0.1:8000/messages/create', { ...args })
+      .catch((error: any) => {
+        console.error(error);
+      })
+    if (response && response.status == 200) {
+      return response.data as Message;
+    } else {
+      return {id: -1, content: ""}
+    }
+
+  }
+
+  async function getDBMessages() {
     loading.value = true;
     axios.get('http://127.0.0.1:8000/messages')
       .then((response: {data: {id: number, content: string}[]}) => {
-        console.error(response);
         messages.value = response.data;
       })
       .catch((error: any) => {
-        console.log(error);
+        console.error(error);
       })
       .finally(() => {
         numMessages.value = messages.value.length;
@@ -44,34 +113,22 @@ import { computed } from 'vue';
       })
   };
 
-  function confirmDeleteDialogue() {
+  async function deleteDBMessage(message: Message) {
+    axios.post('http://127.0.0.1:8000/messages/delete', { id: message.id })
+      .catch((error: any) => {
+        console.error(error);
+    })
+  }
+
+  async function updateDBMessage(message: Message) {
+    axios.post('http://127.0.0.1:8000/messages/update', { ...message })
+      .catch((error: any) => {
+        console.error(error);
+      })
 
   }
 
-  function closeDeleteDialogue() {
-
-  }
-
-  function saveEditedMessage() {
-
-  }
-
-  function closeDialogue() {
-
-  }
-
-  function createMessage(message: Message) {
-  }
-
-  function deleteMessage(message: Message) {
-
-  }
-
-  function editMessage(message: Message) {
-
-  }
-
-  function annotateMessage(message: Message) {
+  function annotateDBMessage(message: Message) {
 
   }
 </script>
@@ -87,7 +144,7 @@ import { computed } from 'vue';
     :search="search"
     class="elevation-1"
     item-value="name"
-    @update:options="getMessages"
+    @update:options="getDBMessages"
   >
     <template v-slot:top>
       <v-toolbar flat>
@@ -108,27 +165,26 @@ import { computed } from 'vue';
             <v-card-text>
               <v-container>
                 <v-row>
-                  <v-col cols="12" sm="6" md="4">
-                    <v-text-field
-                      v-model="editedMessage.content"
-                      label="Content"
-                    ></v-text-field>
-                  </v-col>
+                  <v-text-field
+                    v-model="inputMessage.content"
+                    label="Content"
+                  ></v-text-field>
                 </v-row>
               </v-container>
             </v-card-text>
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="blue-darken-1" variant="text" @click="closeDialogue">
+              <v-btn color="blue-darken-1" variant="text" @click="closeMessageDialogue">
                 Cancel
               </v-btn>
-              <v-btn color="blue-darken-1" variant="text" @click="saveEditedMessage">
+              <v-btn color="blue-darken-1" variant="text" @click="confirmMessageDialogue">
                 Save
               </v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
+
         <v-dialog v-model="isDeleteDialogueOpen" max-width="500px">
           <v-card>
             <v-card-title class="text-h5"
@@ -157,7 +213,7 @@ import { computed } from 'vue';
       <v-icon size="small" @click="deleteMessage(item)" icon="mdi-delete"></v-icon>
     </template>
     <template v-slot:no-data>
-      <v-btn color="primary" @click="getMessages"> Load Messages </v-btn>
+      <v-btn color="primary" @click="getDBMessages"> Load Messages </v-btn>
     </template>
   </v-data-table-server>
 </template>
