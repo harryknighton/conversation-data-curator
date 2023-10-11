@@ -2,9 +2,10 @@
 
 from typing import Any, List
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
 
+from . import schemas as sch
 from .models import Message
 
 
@@ -17,13 +18,8 @@ def count_messages(session: Session) -> int:
     return int(result.scalar_one())
 
 
-def create_test_messages(session: Session) -> None:
-    create_message(session, content="What's on your mind?")
-    create_message(session, content="I'm so scared for tonight")
-
-
-def create_message(session: Session, content: str) -> Message:
-    message = Message(content=content)
+def create_message(session: Session, new_message: sch.CreateMessage) -> Message:
+    message = Message(content=new_message.content)
     session.add(message)
     session.commit()
     session.refresh(message)
@@ -32,4 +28,18 @@ def create_message(session: Session, content: str) -> Message:
 
 def read_messages(session: Session) -> List[Any]:
     result = session.scalars(select(Message)).all()
-    return list(result)  # list() needed for type hinting
+    return list(result)
+
+
+def update_message(session: Session, message: sch.UpdateMessage) -> None:
+    statement = (
+        update(Message).where(Message.id == message.id).values(content=message.content)
+    )
+    session.execute(statement)
+    session.commit()
+
+
+def delete_message(session: Session, message: sch.DeleteItem) -> None:
+    statement = delete(Message).where(Message.id == message.id)
+    session.execute(statement)
+    session.commit()
