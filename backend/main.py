@@ -99,10 +99,18 @@ def count_messages(session: Session = session_dependency) -> int:
 
 @app.get("/codes/", response_model=list[sch.Code])
 def read_codes(
+    search: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_asc: bool = True,
     session: Session = session_dependency,
 ) -> list[models.Code]:
     """Read codes from the database."""
-    return crud.read_codes(session=session)
+    return crud.read_codes(
+        session=session,
+        search=search,
+        sort_by=sort_by,
+        sort_asc=sort_asc,
+    )
 
 
 @app.post("/codes/create/", response_model=Optional[sch.Code])

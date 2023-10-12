@@ -88,8 +88,20 @@ def create_code(session: Session, new_code: sch.CreateCode) -> Optional[Code]:
     return current_code  # Return only the original
 
 
-def read_codes(session: Session) -> List[Any]:
-    statement = sa.select(Code).order_by(Code.code)
+def read_codes(
+    session: Session,
+    search: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_asc: bool = True,
+) -> List[Any]:
+    statement = sa.select(Code)
+    if search is not None:
+        statement = statement.where(Code.code.contains(search))
+    column = sort_by if sort_by is not None else "str"
+    ordering: sa.UnaryExpression[Any] = (
+        sa.asc(column) if sort_by is None or sort_asc else sa.desc(column)
+    )
+    statement = statement.order_by(ordering)
     result = session.scalars(statement).all()
     return list(result)
 
