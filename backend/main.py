@@ -37,12 +37,8 @@ def get_session() -> Generator[Session, None, None]:
 session_dependency = Depends(get_session)
 
 
-@app.post("/messages/create/", response_model=sch.Message)
-def create_message(
-    message: sch.CreateMessage, session: Session = session_dependency
-) -> models.Message:
-    """Create a new message in the database."""
-    return crud.create_message(session, message)
+# -----------------------------------------------------------------------
+# Messages
 
 
 @app.get("/messages/", response_model=list[sch.Message])
@@ -67,6 +63,14 @@ def read_messages(
     )
 
 
+@app.post("/messages/create/", response_model=sch.Message)
+def create_message(
+    message: sch.CreateMessage, session: Session = session_dependency
+) -> models.Message:
+    """Create a new message in the database."""
+    return crud.create_message(session, message)
+
+
 @app.post("/messages/update/")
 def update_message(
     message: sch.UpdateMessage, session: Session = session_dependency
@@ -77,13 +81,51 @@ def update_message(
 
 @app.post("/messages/delete/")
 def delete_message(
-    message: sch.DeleteItem, session: Session = session_dependency
+    message: sch.DeleteMessage, session: Session = session_dependency
 ) -> None:
     """Delete a given message from the database."""
     crud.delete_message(session, message)
 
 
-@app.get("/count/", response_model=int)
-def read_count(session: Session = session_dependency) -> int:
+@app.get("/messages/count/", response_model=int)
+def count_messages(session: Session = session_dependency) -> int:
     """Count the number of messages in the database."""
     return crud.count_messages(session)
+
+
+# -----------------------------------------------------------------------
+# Codes
+
+
+@app.get("/codes/", response_model=list[sch.Code])
+def read_codes(
+    session: Session = session_dependency,
+) -> list[models.Code]:
+    """Read codes from the database."""
+    return crud.read_codes(session=session)
+
+
+@app.post("/codes/create/", response_model=Optional[sch.Code])
+def create_code(
+    code: sch.CreateCode, session: Session = session_dependency
+) -> Optional[models.Code]:
+    """Create a new code in the database if it does not already exist."""
+    return crud.create_code(session, code)
+
+
+@app.post("/codes/update/")
+def update_code(code: sch.UpdateCode, session: Session = session_dependency) -> None:
+    """Update a code in the database."""
+    crud.update_code(session, code)
+
+
+@app.post("/codes/delete/")
+def delete_code(code: sch.DeleteCode, session: Session = session_dependency) -> None:
+    """Delete a given code from the database."""
+    crud.delete_code(session, code)
+
+
+@app.get("/codes/count/", response_model=int)
+def count_codes(session: Session = session_dependency) -> int:
+    """Count the number of codes in the database."""
+    return crud.count_codes(session)

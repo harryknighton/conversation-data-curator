@@ -1,7 +1,9 @@
 """Define the Pydantic data schemas."""
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
+
+# -----------------------------------------------------------------------
+# Messages
 
 
 class MessageBase(BaseModel):
@@ -14,14 +16,6 @@ class Message(MessageBase):
     id: int
 
 
-class ReadMessages(BaseModel):
-    search: Optional[str]
-    limit: Optional[int]
-    offset: Optional[int]
-    sort_by: Optional[str]
-    sort_asc: Optional[bool]
-
-
 class CreateMessage(MessageBase):
     pass
 
@@ -30,5 +24,31 @@ class UpdateMessage(MessageBase):
     id: int
 
 
-class DeleteItem(BaseModel):
+class DeleteMessage(BaseModel):
     id: int
+
+
+# -----------------------------------------------------------------------
+# Codes
+
+
+class CodeBase(BaseModel):
+    code: str
+
+
+class Code(CodeBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+
+
+class CreateCode(CodeBase):
+    pass
+
+
+class UpdateCode(CodeBase):
+    id: int
+
+
+class DeleteCode(CodeBase):
+    pass
