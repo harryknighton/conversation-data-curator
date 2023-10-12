@@ -1,5 +1,5 @@
-"""Create an API to allow access to the database."""
-from typing import Generator
+"""Provide an API to allow access to the database."""
+from typing import Generator, Optional
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,6 +26,7 @@ app.add_middleware(
 
 
 def get_session() -> Generator[Session, None, None]:
+    """Provide a database session dependency to API endpoints."""
     session = SessionLocal()
     try:
         yield session
@@ -40,24 +41,37 @@ session_dependency = Depends(get_session)
 def create_message(
     message: sch.CreateMessage, session: Session = session_dependency
 ) -> models.Message:
+    """Create a new message in the database."""
     return crud.create_message(session, message)
 
 
-@app.get("/test/")
-def create_test_messages(session: Session = session_dependency) -> None:
-    create_message(sch.CreateMessage(content="What's on your mind?"), session)
-    create_message(sch.CreateMessage(content="I'm so scared for tonight"), session)
-
-
 @app.get("/messages/", response_model=list[sch.Message])
-def read_messages(session: Session = session_dependency) -> list[models.Message]:
-    return crud.read_messages(session)
+def read_messages(
+    search: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: int = 0,
+    sort_by: Optional[str] = None,
+    sort_asc: bool = True,
+    session: Session = session_dependency,
+) -> list[models.Message]:
+    """Read `limit` messages from the database starting from `offset` containing
+    `search` ordered by column `sort_by` in direction `sort_asc`.
+    """
+    return crud.read_messages(
+        session=session,
+        search=search,
+        limit=limit,
+        offset=offset,
+        sort_by=sort_by,
+        sort_asc=sort_asc,
+    )
 
 
 @app.post("/messages/update/")
 def update_message(
     message: sch.UpdateMessage, session: Session = session_dependency
 ) -> None:
+    """Update the content of a given message from the database."""
     crud.update_message(session, message)
 
 
@@ -65,9 +79,11 @@ def update_message(
 def delete_message(
     message: sch.DeleteItem, session: Session = session_dependency
 ) -> None:
+    """Delete a given message from the database."""
     crud.delete_message(session, message)
 
 
 @app.get("/count/", response_model=int)
 def read_count(session: Session = session_dependency) -> int:
+    """Count the number of messages in the database."""
     return crud.count_messages(session)

@@ -7,14 +7,16 @@ import { computed } from 'vue';
   declare var require: any
 
   const messages = ref<{id: number, content: string}[]>([]);
-  const numMessages = ref(0);
   const messagesPerPage = ref(10);
+  const pageNumber = ref(0);
   const headers = ref([
     { title: 'ID', key: 'id',  align: 'start' },
     { title: 'Content', key: 'content', align: 'start' },
     { title: 'Actions', key: 'actions', sortable: false }
   ]);
-  const search = ref("");  // Contents of search bar
+  const sortBy = ref([{key: 'id', order: 'asc'}]);
+  const tempSearch = ref("");  // Contents of search bar
+  const search = ref("");  // Final contents of search bar when enter is pressed
   const loading = ref(false);
   const isMessageDialogueOpen = ref(false);
   const isDeleteDialogueOpen = ref(false);
@@ -82,6 +84,11 @@ import { computed } from 'vue';
 
   }
 
+  // Search
+  function updateSearch() {
+    search.value = tempSearch.value
+  }
+
   // Database CRUD operations
   async function createDBMessage(message: Message) : Promise<Message> {
     const args = { ...message } as Partial<Message>;
@@ -100,7 +107,14 @@ import { computed } from 'vue';
 
   async function getDBMessages() {
     loading.value = true;
-    axios.get('http://127.0.0.1:8000/messages')
+    let params = {
+      search: search.value,
+      limit: messagesPerPage.value,
+      offset: messagesPerPage.value * pageNumber.value,
+      sort_by: sortBy.value.length > 0 ? sortBy.value[0].key : 'id',
+      sort_asc: sortBy.value.length > 0 ? sortBy.value[0].order === 'asc': 'asc',
+    }
+    axios.get('http://127.0.0.1:8000/messages', { params })
       .then((response: {data: {id: number, content: string}[]}) => {
         messages.value = response.data;
       })
@@ -108,7 +122,6 @@ import { computed } from 'vue';
         console.error(error);
       })
       .finally(() => {
-        numMessages.value = messages.value.length;
         loading.value = false;
       })
   };
@@ -137,8 +150,10 @@ import { computed } from 'vue';
 <template>
   <v-data-table-server
     v-model:items-per-page="messagesPerPage"
+    v-model:sort-by="sortBy"
+    :page="pageNumber"
     :headers="headers"
-    :items-length="numMessages"
+    :items-length="messages.length"
     :items="messages"
     :loading="loading"
     :search="search"
@@ -151,6 +166,14 @@ import { computed } from 'vue';
         <v-toolbar-title>All Datasets</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
         <v-spacer></v-spacer>
+        <v-text-field
+          v-model="tempSearch"
+          @keydown.enter="updateSearch"
+          append-icon="mdi-magnify"
+          label="Press Enter to Search"
+          single-line
+          hide-details
+        ></v-text-field>
         <v-dialog v-model="isMessageDialogueOpen" max-width="500px">
           <template v-slot:activator="{ props }">
             <v-btn color="primary" dark class="mb-2" v-bind="props">
