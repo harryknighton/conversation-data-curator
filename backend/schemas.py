@@ -52,3 +52,32 @@ class UpdateCode(CodeBase):
 
 class DeleteCode(CodeBase):
     pass
+
+
+# -----------------------------------------------------------------------
+# Annotations
+
+
+class AnnotationBase(BaseModel):
+    code_id: int
+    start_idx: int
+    end_idx: int
+
+
+class Annotation(AnnotationBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    message_id: int
+
+
+class CreateAnnotation(AnnotationBase):
+    message_id: int
+
+
+class UpdateAnnotation(AnnotationBase):
+    id: int
+
+
+class DeleteAnnotation(CodeBase):
+    id: int

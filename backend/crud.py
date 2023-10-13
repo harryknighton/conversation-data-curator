@@ -3,10 +3,11 @@
 from typing import Any, List, Optional
 
 import sqlalchemy as sa
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from . import schemas as sch
-from .models import Code, Message
+from .exceptions import MessageNotFoundError
+from .models import Annotation, Code, Message
 
 # -----------------------------------------------------------------------
 # Messages
@@ -119,5 +120,44 @@ def update_code(session: Session, new_code: sch.UpdateCode) -> None:
 
 def delete_code(session: Session, code: sch.DeleteCode) -> None:
     statement = sa.delete(Code).where(Code.code.contains(code.code))
+    session.execute(statement)
+    session.commit()
+
+
+# -----------------------------------------------------------------------
+# Annotations
+
+
+def create_annotation(
+    session: Session, new_annotation: sch.CreateAnnotation
+) -> Annotation:
+    get_message = sa.select(Message).where(Message.id == new_annotation.message_id)
+    message = session.execute(get_message).scalar_one_or_none()
+    if message is None:
+        raise MessageNotFoundError()
+    annotation = Annotation(
+        code_id=new_annotation.code_id,
+        start_idx=new_annotation.start_idx,
+        end_idx=new_annotation.start_idx,
+    )
+    message.annotations.append(annotation)
+    session.commit()
+    session.refresh(annotation)
+    return annotation
+
+
+def read_annotations(session: Session, message_id: int) -> List[Any]:
+    statement = (
+        sa.select(Annotation, Code)
+        .options(joinedload(Annotation.message), joinedload(Annotation.code))
+        .where(Message.id == message_id)
+        .order_by(Code.code)
+    )
+    result = session.scalars(statement).all()
+    return list(result)
+
+
+def delete_annotation(session: Session, annotation: sch.DeleteAnnotation) -> None:
+    statement = sa.delete(Annotation).where(Annotation.id == annotation.id)
     session.execute(statement)
     session.commit()
