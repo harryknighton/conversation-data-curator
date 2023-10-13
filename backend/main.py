@@ -159,7 +159,7 @@ def read_annotations(
         raise HTTPException(status_code=404, detail="Message not found")
 
 
-@app.post("/annotations/{message_id}/create/", response_model=Optional[sch.Annotation])
+@app.post("/annotations/{message_id}/create/", response_model=sch.Annotation)
 def create_annotation(
     annotation: sch.CreateAnnotation, session: Session = session_dependency
 ) -> models.Annotation:
