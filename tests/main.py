@@ -36,7 +36,7 @@ app.dependency_overrides[get_session] = override_get_session
 client = TestClient(app)
 
 
-@pytest.fixture()  # type: ignore
+@pytest.fixture()
 def test_db() -> Generator[None, None, None]:
     Base.metadata.create_all(bind=engine)
     yield
