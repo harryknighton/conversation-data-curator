@@ -1,4 +1,5 @@
 """Define the Pydantic data schemas."""
+from typing import Tuple
 
 from pydantic import BaseModel, ConfigDict
 
@@ -71,6 +72,12 @@ class Annotation(AnnotationBase):
     message_id: int
 
 
+class AnnotationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    result: Tuple[Annotation, Code]
+
+
 class CreateAnnotation(AnnotationBase):
     message_id: int
 
@@ -79,5 +86,5 @@ class UpdateAnnotation(AnnotationBase):
     id: int
 
 
-class DeleteAnnotation(CodeBase):
+class DeleteAnnotation(BaseModel):
     id: int

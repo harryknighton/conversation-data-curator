@@ -1,13 +1,14 @@
 """Provide an API to allow access to the database."""
 from typing import Generator, Optional
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from . import crud, models
 from . import schemas as sch
 from .database import SessionLocal, engine
+from .exceptions import MessageNotFoundError
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -139,4 +140,39 @@ def count_codes(session: Session = session_dependency) -> int:
     return crud.count_codes(session)
 
 
-pass
+# -----------------------------------------------------------------------
+# Annotations
+
+
+@app.get("/messages/{message_id}/")
+def read_annotations(
+    message_id: int,
+    session: Session = session_dependency,
+) -> list[sch.AnnotationResponse]:
+    """Read annotations from the database for a given message."""
+    try:
+        return crud.read_annotations(
+            session=session,
+            message_id=message_id,
+        )
+    except MessageNotFoundError:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+
+@app.post("/messages/{message_id}/annotate/", response_model=Optional[sch.Annotation])
+def create_annotation(
+    annotation: sch.CreateAnnotation, session: Session = session_dependency
+) -> models.Annotation:
+    """Create a new annotation in the database for a given message."""
+    try:
+        return crud.create_annotation(session=session, new_annotation=annotation)
+    except MessageNotFoundError:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+
+@app.post("/annotations/delete/")
+def delete_annotation(
+    annotation: sch.DeleteAnnotation, session: Session = session_dependency
+) -> None:
+    """Delete a given annotation from the database."""
+    crud.delete_annotation(session, annotation)
