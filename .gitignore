@@ -112,8 +112,9 @@ venv.bak/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
-# Database files
+# Production database files
 *.db
+!example.db
 
 # Logs
 logs
