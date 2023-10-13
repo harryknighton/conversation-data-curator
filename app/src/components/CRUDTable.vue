@@ -83,11 +83,6 @@
     })
   }
 
-  // Annotate a message [Not implemented]
-  function annotateMessage(item: Message) {
-
-  }
-
   // Search
   function updateSearch() {
     search.value = tempSearch.value
@@ -99,7 +94,6 @@
 </script>
 
 <template>
-  <h1>Hello!</h1>
   <v-data-table-server
     :items-length="numItems"
     :items="props.items"
@@ -193,6 +187,7 @@
     <template v-slot:item.actions="{ item }">
       <v-icon size="small" class="me-2" @click="editItem(item)" icon="mdi-pencil"></v-icon>
       <v-icon size="small" @click="deleteItem(item)" icon="mdi-delete"></v-icon>
+      <slot name="actions" :input="item"></slot>
     </template>
     <template v-slot:no-data>
       <v-btn color="primary" @click="loadItems"> Load Messages </v-btn>

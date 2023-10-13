@@ -3,6 +3,7 @@
   import axios from 'axios'
   import CRUDTable from '../components/CRUDTable.vue'
   import { API_URL } from '@/main';
+  import router from '@/router';
 
   const messages: Ref<Message[]> = ref([]);
   const headers = ref([
@@ -68,11 +69,10 @@
       .catch((error: any) => {
         console.error(error);
       })
-
   }
 
-  function annotateDBMessage(message: Message) {
-
+  function annotateMessage(message: Message) {
+    router.push({ name: 'annotations', params: {messageID: message.id}})
   }
 </script>
 
@@ -90,5 +90,8 @@
     :defaultItem="defaultMessage"
     :sortBy="sortBy"
   >
+  <template #actions="actionProps : { input: Message }">
+    <v-icon size="small" @click="annotateMessage(actionProps.input)" icon="mdi-clipboard"></v-icon>
+  </template>
   </CRUDTable>
 </template>
