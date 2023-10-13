@@ -144,7 +144,7 @@ def count_codes(session: Session = session_dependency) -> int:
 # Annotations
 
 
-@app.get("/messages/{message_id}/")
+@app.get("/annotations/{message_id}/")
 def read_annotations(
     message_id: int,
     session: Session = session_dependency,
@@ -159,7 +159,7 @@ def read_annotations(
         raise HTTPException(status_code=404, detail="Message not found")
 
 
-@app.post("/messages/{message_id}/annotate/", response_model=Optional[sch.Annotation])
+@app.post("/annotations/{message_id}/create/", response_model=Optional[sch.Annotation])
 def create_annotation(
     annotation: sch.CreateAnnotation, session: Session = session_dependency
 ) -> models.Annotation:
@@ -168,6 +168,14 @@ def create_annotation(
         return crud.create_annotation(session=session, new_annotation=annotation)
     except MessageNotFoundError:
         raise HTTPException(status_code=404, detail="Message not found")
+
+
+@app.post("/annotations/update/")
+def update_annotation(
+    annotation: sch.UpdateAnnotation, session: Session = session_dependency
+) -> None:
+    """Update the content of a given annotation from the database."""
+    crud.update_annotation(session, annotation)
 
 
 @app.post("/annotations/delete/")

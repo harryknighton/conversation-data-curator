@@ -164,6 +164,20 @@ def read_annotations(session: Session, message_id: int) -> List[sch.AnnotationRe
     ]
 
 
+def update_annotation(session: Session, annotation: sch.UpdateAnnotation) -> None:
+    statement = (
+        sa.update(Annotation)
+        .where(Annotation.id == annotation.id)
+        .values(
+            code_id=annotation.code_id,
+            start_idx=annotation.start_idx,
+            end_idx=annotation.end_idx,
+        )
+    )
+    session.execute(statement)
+    session.commit()
+
+
 def delete_annotation(session: Session, annotation: sch.DeleteAnnotation) -> None:
     statement = sa.delete(Annotation).where(Annotation.id == annotation.id)
     session.execute(statement)
