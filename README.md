@@ -7,6 +7,8 @@ To set up the environment given in pyproject.toml, run
 ```pdm install```. The FastAPI API can then be launched using
 ```pdm run uvicorn backend.main:app --reload```.
 
+Initially, the database will be empty. An example database is provided which can be set up using ```cp example.db app.db```.
+
 ### Web App
 The web app uses the [npm](https://www.npmjs.com/) package manager.
 To set up the app, run ```npm install``` in the [./app](./app/) directory.
@@ -15,7 +17,7 @@ The local API URL constant in [this file](./app/src/main.ts) may need to be upda
 
 
 ## License
-This work is licensed under the MIT open-source license.
+This work is licensed under the BSD 3-clause permissive license.
 
 
 ## Software Engineering Methodology
