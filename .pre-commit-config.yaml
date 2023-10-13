@@ -35,4 +35,5 @@ repos:
             - sqlalchemy>=2.0.21
             - alembic>=1.12.0
             - fastapi>=0.103.2
+            - pytest>=7.4.2
         args: [--config-file, setup.cfg]
