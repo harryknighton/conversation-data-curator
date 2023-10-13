@@ -137,3 +137,6 @@ def delete_code(code: sch.DeleteCode, session: Session = session_dependency) -> 
 def count_codes(session: Session = session_dependency) -> int:
     """Count the number of codes in the database."""
     return crud.count_codes(session)
+
+
+pass
