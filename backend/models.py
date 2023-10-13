@@ -15,7 +15,7 @@ class Message(Base):
     id = sa.Column("id", sa.Integer, primary_key=True)
     content = sa.Column("content", sa.String)
     annotations: Mapped[List["Annotation"]] = relationship(
-        back_populates="message", cascade="delete-orphan"
+        back_populates="message", cascade="delete, delete-orphan"
     )
 
 
@@ -24,15 +24,21 @@ class Code(Base):
 
     id = sa.Column("id", sa.Integer, primary_key=True)
     code = sa.Column("code", sa.String, unique=True)
-    annotations: Mapped[List["Annotation"]] = relationship(cascade="delete-orphan")
+    annotations: Mapped[List["Annotation"]] = relationship(
+        back_populates="code", cascade="all, delete-orphan"
+    )
 
 
 class Annotation(Base):
     __tablename__ = "annotations"
 
     id = sa.Column("id", sa.Integer, primary_key=True)
-    message_id = sa.Column("message_id", sa.Integer, sa.ForeignKey("messages.id"))
-    code_id = sa.Column("code_id", sa.Integer, sa.ForeignKey("codes.id"))
+    message_id = sa.Column(
+        "message_id", sa.Integer, sa.ForeignKey("messages.id", ondelete="CASCADE")
+    )
+    code_id = sa.Column(
+        "code_id", sa.Integer, sa.ForeignKey("codes.id", ondelete="CASCADE")
+    )
     start_idx = sa.Column("start_idx", sa.Integer)
     end_idx = sa.Column("end_idx", sa.Integer)
     message: Mapped["Message"] = relationship(back_populates="annotations")

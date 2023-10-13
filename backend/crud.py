@@ -3,7 +3,7 @@
 from typing import Any, List, Optional
 
 import sqlalchemy as sa
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 from . import schemas as sch
 from .exceptions import MessageNotFoundError
@@ -98,7 +98,7 @@ def read_codes(
     statement = sa.select(Code)
     if search is not None:
         statement = statement.where(Code.code.contains(search))
-    column = sort_by if sort_by is not None else "str"
+    column = sort_by if sort_by is not None else "code"
     ordering: sa.UnaryExpression[Any] = (
         sa.asc(column) if sort_by is None or sort_asc else sa.desc(column)
     )
@@ -138,23 +138,30 @@ def create_annotation(
     annotation = Annotation(
         code_id=new_annotation.code_id,
         start_idx=new_annotation.start_idx,
-        end_idx=new_annotation.start_idx,
+        end_idx=new_annotation.end_idx,
+        message=message,
     )
+    session.add(annotation)
     message.annotations.append(annotation)
     session.commit()
     session.refresh(annotation)
     return annotation
 
 
-def read_annotations(session: Session, message_id: int) -> List[Any]:
-    statement = (
-        sa.select(Annotation, Code)
-        .options(joinedload(Annotation.message), joinedload(Annotation.code))
-        .where(Message.id == message_id)
-        .order_by(Code.code)
-    )
-    result = session.scalars(statement).all()
-    return list(result)
+def read_annotations(session: Session, message_id: int) -> List[sch.AnnotationResponse]:
+    get_message = sa.select(Message).where(Message.id == message_id)
+    message: Message | None = session.execute(get_message).scalar_one_or_none()
+    if message is None:
+        raise MessageNotFoundError()
+    return [
+        sch.AnnotationResponse(
+            result=(
+                sch.Annotation.model_validate(annotation),
+                sch.Code.model_validate(annotation.code),
+            )
+        )
+        for annotation in message.annotations
+    ]
 
 
 def delete_annotation(session: Session, annotation: sch.DeleteAnnotation) -> None:
